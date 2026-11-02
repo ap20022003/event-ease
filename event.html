@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventHub | Approval-Based Event Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .badge-upcoming { background-color: #e0e7ff; color: #4338ca; }
+    .badge-completed { background-color: #dcfce7; color: #15803d; }
+    .badge-cancelled { background-color: #fee2e2; color: #b91c1c; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- ================= AUTH SCREEN (LOGIN / SIGNUP) ================= -->
+  <section id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
+      
+      <div class="bg-indigo-700 text-white p-6 text-center">
+        <div class="w-12 h-12 bg-amber-400 text-slate-950 rounded-xl flex items-center justify-center mx-auto mb-2 text-2xl font-bold shadow-md">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold tracking-tight">Event-Ease</h2>
+        <p class="text-xs text-indigo-200 mt-1">Role-Based Event Portal with Admin Approvals</p>
+      </div>
+
+      <div class="p-6">
+        <div class="flex bg-slate-100 p-1 rounded-xl mb-5">
+          <button id="authTabLogin" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
+            Sign In
+          </button>
+          <button id="authTabRegister" onclick="switchAuthTab('register')" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 transition">
+            Create Account
+          </button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
+            <input type="email" id="loginEmail" required placeholder="name@example.com" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+            <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div id="loginError" class="hidden text-xs text-rose-600 bg-rose-50 p-2.5 rounded-lg border border-rose-200"></div>
+
+          <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg shadow-sm transition">
+            Login
+          </button>
+
+          <!-- Quick Autofills -->
+          <div class="pt-4 border-t border-slate-100 text-center">
+            <p class="text-[11px] text-slate-400 mb-2 font-medium">Quick Demo Accounts (Click to Fill):</p>
+            <div class="flex gap-2">
+              <button type="button" onclick="autoFill('admin@eventhub.com', 'admin123')" class="flex-1 text-[11px] py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-md font-semibold">
+                <i class="fa-solid fa-shield mr-1"></i> Admin Demo
+              </button>
+              <button type="button" onclick="autoFill('client@eventhub.com', 'client123')" class="flex-1 text-[11px] py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-md font-semibold">
+                <i class="fa-solid fa-user mr-1"></i> Client Demo
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- SIGNUP FORM -->
+        <form id="signupForm" onsubmit="handleSignup(event)" class="space-y-3.5 hidden">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Account Role</label>
+            <select id="regRole" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+              <option value="client">Client (Book Events)</option>
+              <option value="admin">Admin (Manage & Approve)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
+            <input type="text" id="regName" required placeholder="Aakash Jass" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
+            <input type="email" id="regEmail" required placeholder="aakash@example.com" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+            <input type="password" id="regPass" required placeholder="Create a password" class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div id="regError" class="hidden text-xs text-rose-600 bg-rose-50 p-2.5 rounded-lg border border-rose-200"></div>
+
+          <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg shadow-sm transition">
+            Register Account
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN DASHBOARD ================= -->
+  <div id="mainApp" class="hidden flex-col min-h-screen">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-calendar-check text-2xl text-amber-400"></i>
+          <span class="text-xl font-bold tracking-tight">EventHub</span>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="text-right hidden sm:block">
+            <div id="userDisplayName" class="text-xs font-bold leading-none">User</div>
+            <span id="userRoleBadge" class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full mt-0.5 inline-block">Role</span>
+          </div>
+
+          <button onclick="handleLogout()" class="bg-rose-500/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-400/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-6 flex-1 w-full">
+
+      <!-- ================= 1. CLIENT VIEW ================= -->
+      <section id="clientPortal" class="space-y-6 hidden">
+        <!-- Banner -->
+        <div class="bg-gradient-to-br from-indigo-700 via-indigo-800 to-slate-900 text-white rounded-2xl p-5 sm:p-8 shadow-md">
+          <span class="text-xs font-semibold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full border border-amber-400/20">Client Portal</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold mt-2 leading-tight">Explore Events & Track Approvals</h1>
+          <p class="text-indigo-200 text-sm mt-1 max-w-xl">Register for your preferred events. Seats are confirmed once reviewed and approved by event admins.</p>
+        </div>
+
+        <!-- My Bookings Section -->
+        <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-base font-bold text-slate-800 flex items-center">
+              <i class="fa-solid fa-ticket text-indigo-600 mr-2"></i> My Event Applications
+            </h2>
+            <span class="text-xs text-slate-400">Live Status Tracker</span>
+          </div>
+          <div id="clientBookingsList" class="divide-y divide-slate-100 text-xs sm:text-sm">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full sm:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+            <input type="text" id="clientSearch" placeholder="Search event or city..." oninput="renderClient()" class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <select id="clientCategory" onchange="renderClient()" class="w-full sm:w-auto px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+            <option value="ALL">All Categories</option>
+            <option value="Technology">Technology</option>
+            <option value="Design">Design</option>
+            <option value="Music">Music</option>
+            <option value="Business">Business</option>
+          </select>
+        </div>
+
+        <!-- Events Grid -->
+        <div id="clientGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
+      </section>
+
+      <!-- ================= 2. ADMIN VIEW ================= -->
+      <section id="adminPortal" class="space-y-5 hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">Admin Control</span>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">Approval & Event Dashboard</h1>
+            <p class="text-xs sm:text-sm text-slate-500">Review pending client applications, confirm bookings, and manage inventory.</p>
+          </div>
+          <button onclick="openModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add New Event</span>
+          </button>
+        </div>
+
+        <!-- Metrics -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">Total Events</div>
+            <div id="metricTotal" class="text-xl sm:text-2xl font-bold text-slate-800 mt-0.5">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">Pending Approvals</div>
+            <div id="metricPending" class="text-xl sm:text-2xl font-bold text-amber-500 mt-0.5">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">Confirmed Seats</div>
+            <div id="metricConfirmed" class="text-xl sm:text-2xl font-bold text-emerald-600 mt-0.5">0</div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">Upcoming Events</div>
+            <div id="metricUpcoming" class="text-xl sm:text-2xl font-bold text-indigo-600 mt-0.5">0</div>
+          </div>
+        </div>
+
+        <!-- Admin Table -->
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
+                <tr>
+                  <th class="p-3 sm:p-4">Event</th>
+                  <th class="p-3 sm:p-4">Date & City</th>
+                  <th class="p-3 sm:p-4">Confirmed Occupancy</th>
+                  <th class="p-3 sm:p-4">Approval Queue</th>
+                  <th class="p-3 sm:p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminTableBody" class="divide-y divide-slate-200 text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= REGISTRATION FORM (CLIENT) ================= -->
+  <div id="registerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="bg-indigo-700 text-white px-5 py-4 flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-base">Apply for Event Registration</h3>
+          <p id="regEventTitle" class="text-xs text-indigo-200 truncate max-w-[280px] mt-0.5"></p>
+        </div>
+        <button onclick="closeRegisterModal()" class="text-indigo-200 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="registerForm" onsubmit="handleRegistrationSubmit(event)" class="p-5 space-y-3.5 text-xs sm:text-sm">
+        <input type="hidden" id="regEventId" />
+
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 p-2.5 rounded-lg text-xs flex items-start space-x-2">
+          <i class="fa-solid fa-circle-info mt-0.5 text-amber-600"></i>
+          <span>Note: Submitting this form sends an approval request to the organizer. Your seat will be confirmed once approved.</span>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Full Name <span class="text-rose-500">*</span></label>
+          <input type="text" id="attendeeName" required placeholder="e.g. Rahul Sharma" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Email Address <span class="text-rose-500">*</span></label>
+          <input type="email" id="attendeeEmail" required placeholder="rahul@example.com" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Phone Number <span class="text-rose-500">*</span></label>
+          <input type="tel" id="attendeePhone" required pattern="[0-9]{10}" placeholder="10-digit mobile number" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeRegisterModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 font-semibold hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold shadow-sm">Submit Application</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN APPROVAL & ATTENDEE MODAL ================= -->
+  <div id="attendeesModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden max-h-[85vh] flex flex-col">
+      <div class="bg-slate-800 text-white px-5 py-4 flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-base">Registration Approval Center</h3>
+          <p id="attendeeModalSubtitle" class="text-xs text-slate-400"></p>
+        </div>
+        <button onclick="closeAttendeesModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto flex-1">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100 text-slate-600 font-semibold border-b">
+              <th class="p-2.5">Applicant Details</th>
+              <th class="p-2.5">Contact</th>
+              <th class="p-2.5">Applied Time</th>
+              <th class="p-2.5">Status</th>
+              <th class="p-2.5 text-right">Approval Decision</th>
+            </tr>
+          </thead>
+          <tbody id="attendeeTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+        </table>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t flex justify-end">
+        <button onclick="closeAttendeesModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DIGITAL CONFIRMED TICKET POPUP ================= -->
+  <div id="ticketModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden text-center p-6 border-2 border-emerald-200">
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-800">Seat Confirmed!</h3>
+      <p class="text-xs text-slate-500 mt-1">Your registration has been approved by the Admin.</p>
+
+      <div class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300 my-4 text-left space-y-1.5 text-xs">
+        <div><span class="text-slate-400">Attendee:</span> <strong id="ticketName" class="text-slate-700"></strong></div>
+        <div><span class="text-slate-400">Event:</span> <strong id="ticketEvent" class="text-slate-700"></strong></div>
+        <div><span class="text-slate-400">Status:</span> <span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold text-[10px]">APPROVED</span></div>
+        <div><span class="text-slate-400">Pass ID:</span> <span id="ticketId" class="font-mono text-indigo-600 font-semibold"></span></div>
+      </div>
+
+      <button onclick="closeTicketModal()" class="w-full py-2 bg-indigo-600 text-white rounded-lg font-semibold text-xs hover:bg-indigo-700">
+        Close Pass
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= CREATE/EDIT EVENT MODAL ================= -->
+  <div id="eventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="bg-indigo-700 text-white px-5 py-3.5 flex justify-between items-center">
+        <h3 id="modalHeading" class="font-bold text-base">Add New Event</h3>
+        <button onclick="closeModal()" class="text-indigo-200 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="modalForm" onsubmit="handleFormSubmit(event)" class="p-5 space-y-3 text-xs sm:text-sm">
+        <input type="hidden" id="formId" />
+
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Event Name</label>
+          <input type="text" id="formTitle" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. AI Conclave" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-600 mb-1">Date</label>
+            <input type="date" id="formDate" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block font-medium text-slate-600 mb-1">Category</label>
+            <select id="formCategory" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+              <option value="Technology">Technology</option>
+              <option value="Design">Design</option>
+              <option value="Music">Music</option>
+              <option value="Business">Business</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-600 mb-1">Venue / City</label>
+            <input type="text" id="formLocation" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Delhi / Hall 2" />
+          </div>
+          <div>
+            <label class="block font-medium text-slate-600 mb-1">Total Capacity</label>
+            <input type="number" id="formCapacity" min="1" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="50" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Description</label>
+          <textarea id="formDesc" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Brief outline..."></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 font-semibold hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold shadow-sm">Save Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= APPLICATION SCRIPTS ================= -->
+
+    <script src="event.js"></script>
+</body>
+</html
